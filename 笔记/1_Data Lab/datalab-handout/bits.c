@@ -165,7 +165,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return !((x + 1) ^ (0x01 << 31));
+  return !!(x + 1) & !((x + x + 2) ^ 0);
 }
 /*
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -322,18 +322,19 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  int sign = uf & (1 << 31);
-  unsigned exponent = (uf >> 23) & 0xff;
-  unsigned frac = uf & ((0x7f << 16) + (0xff << 8) + 0xff);
-  int int_exponent = exponent + ~127 + 1;
-  if (int_exponent >= 30)
-      return(0x80000000u);
-  else if (int_exponent < 0)
-      return(0);
-  else if (int_exponent == 0)
-      return (sign >> 30) + 1;
-  else
-      return(sign + (1 << int_exponent) + (frac >> (23 + ~int_exponent + 1)));
+    unsigned sign = (uf >> 31) & 1;
+    unsigned exponent = (uf >> 23) & 0xff;
+    unsigned frac = uf & ((0x7f << 16) + (0xff << 8) + 0xff);
+    int exponent_val = exponent + ~127 + 1;
+    int result = (1 << exponent_val) + (frac >> (23 + ~exponent_val + 1));
+    if (exponent_val > 31)
+       return(0x80000000u);
+    else if (exponent_val < 0)
+       return(0);
+    else if (sign ^ 1)
+        return result;
+    else
+        return ~result + 1;
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x

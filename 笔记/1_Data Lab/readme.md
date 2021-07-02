@@ -134,15 +134,15 @@ int isTmax(int x)
 !(x ^ y)
 ```
 
-补码整数int的最大值`0x7fffffff`与最小值`0x80000000`的二进制表达式之间只需加减`1`就能进行转换。
-所以我们可以让`x`与最小值进行比较。
+补码整数int型的最大值`0x7fffffff`有一个性质，就是`2x + 2`等于`0`，除了补码整数int型的`-1`也有这个性质之外，其他的数都没有这个性质。
+因为补码整数int型`-1`加`1`可以等于`0`，所以我们可以通过使用异或`~`和位与`&`来判断所给的值是否为`-1`以及是否`2x+2`等于`0`。
 
-正确答案为
+所以正确答案为
 ```c
 int isTmax(int x) 
 {
-    // x加1与最小值0x7fffffff进行比较
-    return !((x + 1) ^ (0x01 << 31));
+    // 判断x是否为-1以及2x+2是否为0
+    return !!(x + 1) & !((x + x + 2) ^ 0);
 }
 ```
 
@@ -517,4 +517,212 @@ int howManyBits(int x)
 ![answer10](image/2021-07-02-19-14-00.png)
 
 #### 2.2 浮点数有关的题
+
+##### 2.21 浮点数乘二
+
+**题目描述**
+
+```c
+/*
+* floatScale2 - Return bit-level equivalent of expression 2*f for
+*               floating point argument f.
+*               Both the argument and result are passed as unsigned int's, but
+*               they are to be interpreted as the bit-level representation of
+*               single-precision floating point values.
+*               When argument is NaN, return argument
+*   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+*   Max ops: 30
+*   Rating: 4
+*/
+unsigned floatScale2(unsigned uf) 
+{
+
+}
+```
+
+**题目分析**
+
+这一道题让我们将所给的无符号整数的二进制位当做是float浮点数的二进制位，并对该浮点数乘二，返回乘二后的二进制位。如果该浮点数为无穷或者`NAN`，则直接返回该值。
+
+我们所用的浮点数标准大部分为[IEEE标准754](https://baike.baidu.com/item/IEEE%20754/3869922)。
+该标准对于浮点数与整数的乘积结果，有以下特点：
+1. 如果浮点数为规格化数：
+   则对浮点数的乘积就是对阶码编码值的改变。
+2. 如果浮点数为非规格化数：
+   则对浮点数的乘积就是对尾数的乘积(也可以看做把尾数整体往左或者右移动)。
+3. 如果浮点数为特殊值(也就是阶码位全为1)：
+   则对该浮点数进行的乘积对其没有作用。
+
+根据以上的性质，我们可以先提取出浮点数的符号位和阶码位，然后根据阶码编码值进行不同的操作。
+
+所以正确答案为
+```c
+unsigned floatScale2(unsigned uf) 
+{
+    // 提取符号位
+    unsigned sign = uf & (1 << 31);
+    // 提取阶码位
+    unsigned exponent = uf & (0xff << 23);
+    // 当浮点数为特殊值的情况
+    if (exponent == (0xff << 23))
+        return(uf);
+    // 当浮点数为非规格化数的情况
+    else if (exponent == 0)
+        return(sign + uf + uf);
+    // 当浮点数为规格化数的情况
+    else
+        return(uf + (0x1 << 23));
+}
+```
+
+![answer11](image/2021-07-02-21-16-49.png)
+
+##### 2.22 浮点数转换成有符号整数
+
+**题目描述**
+
+```c
+/*
+* floatFloat2Int - Return bit-level equivalent of expression (int) f
+*                  for floating point argument f.
+*                  Argument is passed as unsigned int, but
+*                  it is to be interpreted as the bit-level representation of a
+*                  single-precision floating point value.
+*                  Anything out of range (including NaN and infinity) should return
+*                  0x80000000u.
+*   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+*   Max ops: 30
+*   Rating: 4
+*/
+int floatFloat2Int(unsigned uf) 
+{
+
+}
+```
+
+**题目分析**
+
+这一道题让我们将所给的无符号整数的二进制位当做是float浮点数的二进制位，并对该浮点数进行类型转换，将其转换成int型整数。如果该浮点数超出了范围(包括为无穷或者`NAN`)，则返回`0x80000000u`。
+
+对于规格化浮点数转换为整数，我们通常是以以下的流程进行转换的：
+1. 算出阶码的编码值，并减去偏置值，从左到右按照此值将对应数量的尾数记录下来，这些数就是整数的大部分有效位。
+2. 再在这些数的最前面加上值为1的位，然后在开头加上多个0，直至已经达到32位。
+3. 如果符号位为1，则需要将该整数转换为其相反数(按位取反再加1)；否则整数的转换就已经完成。
+
+IEEE标准754对于浮点数转换为整数，有以下的特点：
+1. 如果浮点数的阶码值(进行偏置处理后)小于0或者浮点数为非规格化数时：
+   则转换后的整数就为0。
+2. 如果浮点数的阶码值(进行偏置处理后)大于31或者阶码位全为1时：
+   则转换后的整数就为`0x80000000`。
+
+根据以上的性质，我们可以先提取出浮点数的符号位、阶码位和尾数位，然后根据阶码值(进行偏置处理后)进行不同的操作。
+
+所以正确答案为
+```c
+int floatFloat2Int(unsigned uf) 
+{
+   // 提取符号位，并放在末尾
+   unsigned sign = (uf >> 31) & 1;
+   // 提取阶码位，并放在末尾
+   unsigned exponent = (uf >> 23) & 0xff;
+   // 提取尾数位
+   unsigned frac = uf & ((0x7f << 16) + (0xff << 8) + 0xff);
+   // 阶码值(进行偏置处理后)
+   int exponent_val = exponent + ~127 + 1;
+   // 规格化浮点数变为整数的正常转换
+   int result = (1 << exponent_val) + (frac >> (23 + ~exponent_val + 1));
+   // 当阶码值(进行偏置处理后)大于31或者阶码位全为1的情况
+   if (exponent_val > 31)
+   return(0x80000000u);
+   // 当阶码值(进行偏置处理后)小于0小于0或者为非规格化数的情况
+   else if (exponent_val < 0)
+   return(0);
+   // 当符号位为0的情况
+   else if (sign ^ 1)
+   return result;
+   // 当符号位为1的情况
+   else
+   return ~result + 1;
+}
+```
+
+![answer12](image/2021-07-02-23-57-50.png)
+
+##### 2.23 2的指数形式的浮点数
+
+**题目描述**
+
+```c
+/*
+* floatPower2 - Return bit-level equivalent of the expression 2.0^x
+*   (2.0 raised to the power x) for any 32-bit integer x.
+*
+*   The unsigned value that is returned should have the identical bit
+*   representation as the single-precision floating-point number 2.0^x.
+*   If the result is too small to be represented as a denorm, return
+*   0. If too large, return +INF.
+*
+*   Legal ops: Any integer/unsigned operations incl. ||, &&. Also if, while
+*   Max ops: 30
+*   Rating: 4
+*/
+unsigned floatPower2(int x) 
+{
+
+}
+```
+
+**题目分析**
+
+这一道题让我们将所给的补码整数当做以2为底的指数，并将这个2的幂转换为浮点数的形式。
+
+IEEE标准754对于2的幂转换为浮点数，有以下的特点：
+1. 如果该2次幂的指数在规格化范围内(大于等于-126，小于等于127)：
+   则转换后的浮点数为：
+   * 符号位为0。
+   * 阶码编码值为偏置值加上该指数。
+   * 尾数位全为0。
+2. 如果该2次幂的指数在非规格化范围内（大于等于-149(因为最小的非规格化数为$2^{-23}\times2^{-126}$)，小于等于-126）：
+   则转换后的浮点数为：
+   * 符号位为0。
+   * 阶码位全为0。
+   * 尾数位有且只有一位的值为1的位(当指数为-126时可以没有)，该位的编号(从尾数位的最左到右，从1开始计算)为$该幂的指数-126$，其余全为0。
+3. 如果该2次幂的指数大于127，则浮点数为阶码位全为1的特殊值；小于-149时，浮点数为0。
+
+根据以上的性质，我们可以直接根据所给的指数值进行不同的操作。
+
+所以正确答案为
+```c
+unsigned floatPower2(int x)
+{
+   // 指数大于127的情况
+   if (x > 127) return 0xff << 23;
+   // 指数小于-149的情况
+   else if (x < -149) return 0;
+   // 指数在规格数范围的情况
+   else if (x >= -126) return (x + 127) << 23;
+   // 指数在非规格数范围的情况
+   else return 1 << (23 + x + 126);
+}
+```
+
+> 很遗憾，这个题目floatPower2始终无法通过，一直提示死循环。不过不是逻辑上的错误，在VS2019和vscode上完全可以运行，没有进入死循环。所以应该是该实验自带的计分程序的bug。
+
+![answer13](image/2021-07-03-00-42-58.png)
+
+### 3. 总结
+
+本次实验中的各个题目的操作符使用情况：
+![use1](image/2021-07-03-01-23-55.png)
+![use2](image/2021-07-03-01-24-27.png)
+
+> 不知道为什么，语法检查程序一直显示howManyBits题中我使用了未声明的变量，但是我明明声明了，而且在VS2019和vscode上完全没有错误，所以应该又是一个该实验自带的语法检查程序中的bug。
+
+本次实验的最终得分：
+![final_score](image/2021-07-03-00-44-46.png)
+
+这是我第一次做CSAPP上的实验题，感觉本次实验的题目的难度比较大，加上还有各种语句、表达式和操作符数量的限制，所以整体难度我估计是leetcode上的困难题。
+再加上因为都是涉及位运算的，之前刷的题也没有涉及太多这方面的题型，所以花了不少时间。
+
+希望能坚持下来，继续完成后面的实验，加油！
 
