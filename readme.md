@@ -19,3 +19,5 @@
 ##### 笔记目录
 
 [1. Data Lab](笔记/1_Data%20Lab)
+
+[2. Bomb Lab](笔记/2_Bomb%20Lab)
