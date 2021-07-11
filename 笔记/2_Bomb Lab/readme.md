@@ -737,7 +737,7 @@ void phase_5(char *str)
   40110e:	41 bc 00 00 00 00    	mov    $0x0,%r12d  #0
   401114:	4c 89 ed             	mov    %r13,%rbp  #&a
   401117:	41 8b 45 00          	mov    0x0(%r13),%eax  #a
-  40111b:	83 e8 01             	sub    $0x1,%eax  #a - 1
+  40111b:	83 e8 01             	sub    $0x1,%eax  #a-1
   40111e:	83 f8 05             	cmp    $0x5,%eax  #a-1 <= 5
   401121:	76 05                	jbe    401128 <phase_6+0x34>
   401123:	e8 12 03 00 00       	callq  40143a <explode_bomb>
@@ -747,7 +747,7 @@ void phase_5(char *str)
   401132:	44 89 e3             	mov    %r12d,%ebx  #1
   401135:	48 63 c3             	movslq %ebx,%rax  #%ebx 1 -> ...
   401138:	8b 04 84             	mov    (%rsp,%rax,4),%eax  #%eax b -> c -> d -> e -> f
-  40113b:	39 45 00             	cmp    %eax,0x0(%rbp)  a/b/... != %eax
+  40113b:	39 45 00             	cmp    %eax,0x0(%rbp)  #a/b/... != %eax
   40113e:	75 05                	jne    401145 <phase_6+0x51>
   401140:	e8 f5 02 00 00       	callq  40143a <explode_bomb>
   401145:	83 c3 01             	add    $0x1,%ebx  #%ebx 2 -> ...
