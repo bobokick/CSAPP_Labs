@@ -822,6 +822,16 @@ void phase_5(char *str)
 * 每个节点的值就是该节点地址的解引用。
 ![str7](image/2021-07-11-05-25-39.png)
 
+以下是该函数所给的链表的各节点的地址与值：
+```mermaid
+graph LR
+head(0x6032d0 value:0x14c)-->a(0x6032e0 value:0xa8)
+a-->b(0x6032f0 value:0x39c)
+b-->c(0x603300 value:0x2b3)
+c-->d(0x603310 value:0x1dd)
+d-->tail(0x603320 value:0x1bb)
+```
+
 所以`phase_6`函数对应的C语言代码应该为：
 ```c
 void phase_6(char *str)
@@ -932,6 +942,176 @@ void phase_6(char *str)
 
 以下是通过第六关的提示：
 ![pass6](image/2021-07-11-05-29-12.png)
+
+我们在破解完第六关的密码后，程序就已经显示我们成功拆除了炸弹，并且程序也正常终止。
+这也就证明了我们已经成功完成了拆弹任务，我们可以收工回家咯！
+
+> 炸弹真的拆除了吗&#x2753;&#x1F608;
+
+#### 3.7 彩蛋关
+
+欢迎来到隐藏关卡！
+其实这个程序还有一个隐藏的关卡，不过通不通过隐藏关并不会影响正常的流程，这个只是一个额外的关卡。
+
+细心的同学在破解的过程中会发现，程序的汇编代码中含有一个叫做`secret_phase`的函数，该函数也是让我们输入字符并决定是否引爆炸弹，这个函数也就是这个隐藏关所要破解的函数。
+
+> 炸弹制作者——邪恶博士也在他的`bomb.c`文件中暗示过隐藏关的存在。
+> ![secret](image/2021-07-11-17-36-53.png)
+
+现在，就让我们来破解隐藏关的密码！
+
+##### 3.71 fun7函数
+
+我们对`secret_phase`函数分析，发现其调用了一个名为`fun7`的函数。
+
+对`fun7`函数进行分析，发现该函数应该有两个形参，第一个形参应该为int指针，表示某二叉数的根节点；第二个形参应该为int型。
+该函数中存在递归调用。
+
+```bash
+0000000000401204 <fun7>:
+  401204:	48 83 ec 08          	sub    $0x8,%rsp
+  401208:	48 85 ff             	test   %rdi,%rdi
+  40120b:	74 2b                	je     401238 <fun7+0x34>
+  40120d:	8b 17                	mov    (%rdi),%edx
+  40120f:	39 f2                	cmp    %esi,%edx
+  401211:	7e 0d                	jle    401220 <fun7+0x1c>
+  401213:	48 8b 7f 08          	mov    0x8(%rdi),%rdi
+  401217:	e8 e8 ff ff ff       	callq  401204 <fun7>
+  40121c:	01 c0                	add    %eax,%eax
+  40121e:	eb 1d                	jmp    40123d <fun7+0x39>
+  401220:	b8 00 00 00 00       	mov    $0x0,%eax
+  401225:	39 f2                	cmp    %esi,%edx
+  401227:	74 14                	je     40123d <fun7+0x39>
+  401229:	48 8b 7f 10          	mov    0x10(%rdi),%rdi
+  40122d:	e8 d2 ff ff ff       	callq  401204 <fun7>
+  401232:	8d 44 00 01          	lea    0x1(%rax,%rax,1),%eax
+  401236:	eb 05                	jmp    40123d <fun7+0x39>
+  401238:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+  40123d:	48 83 c4 08          	add    $0x8,%rsp
+  401241:	c3                   	retq     
+```
+
+该函数的作用是：
+用来查找所给的值是否存在于所给的二叉排序树中，并返回某种位置编号。
+
+所以`fun7`函数对应的C语言代码应该为：
+```c
+// 该函数是用来查找所给的整数值是否存在于所给的二叉排序树中
+// 并返回某种位置编号
+int fun7(int* root, int val)
+{
+    // 当树为空时，返回-1
+    if (root == NULL) 
+        return -1;
+    // 当val等于当前节点的值时，返回0
+    // 当val大于当前节点的值时，进入右子节点继续查找
+    else if (*root <= val)
+    {
+        if (*root == val)
+            return 0;
+        else
+            return fun7((int*)*(root + 2), val) * 2 + 1;
+    }
+    // 当val小于当前节点的值时，进入左子节点继续查找
+    else
+        return fun7((int*)*(root + 1), val) * 2;
+}
+```
+
+##### 3.72 secret_phase函数
+
+对`secret_phase`函数进行分析。
+
+```bash
+0000000000401242 <secret_phase>:
+  401242:	53                   	push   %rbx
+  401243:	e8 56 02 00 00       	callq  40149e <read_line>
+  401248:	ba 0a 00 00 00       	mov    $0xa,%edx
+  40124d:	be 00 00 00 00       	mov    $0x0,%esi
+  401252:	48 89 c7             	mov    %rax,%rdi
+  401255:	e8 76 f9 ff ff       	callq  400bd0 <strtol@plt>
+  40125a:	48 89 c3             	mov    %rax,%rbx
+  40125d:	8d 40 ff             	lea    -0x1(%rax),%eax
+  401260:	3d e8 03 00 00       	cmp    $0x3e8,%eax
+  401265:	76 05                	jbe    40126c <secret_phase+0x2a>
+  401267:	e8 ce 01 00 00       	callq  40143a <explode_bomb>
+  40126c:	89 de                	mov    %ebx,%esi
+  40126e:	bf f0 30 60 00       	mov    $0x6030f0,%edi
+  401273:	e8 8c ff ff ff       	callq  401204 <fun7>
+  401278:	83 f8 02             	cmp    $0x2,%eax
+  40127b:	74 05                	je     401282 <secret_phase+0x40>
+  40127d:	e8 b8 01 00 00       	callq  40143a <explode_bomb>
+  401282:	bf 38 24 40 00       	mov    $0x402438,%edi
+  401287:	e8 84 f8 ff ff       	callq  400b10 <puts@plt>
+  40128c:	e8 33 03 00 00       	callq  4015c4 <phase_defused>
+  401291:	5b                   	pop    %rbx
+  401292:	c3                   	retq   
+  401293:	90                   	nop
+  401294:	90                   	nop
+  401295:	90                   	nop
+  401296:	90                   	nop
+  401297:	90                   	nop
+  401298:	90                   	nop
+  401299:	90                   	nop
+  40129a:	90                   	nop
+  40129b:	90                   	nop
+  40129c:	90                   	nop
+  40129d:	90                   	nop
+  40129e:	90                   	nop
+  40129f:	90                   	nop
+```
+
+对`secret_phase`函数分析后，发现其调用`strtol`函数来将读取的字符串转换成整数；且该函数还调用`fun7`函数来判断转换后的值是否存在于所给的二叉排序树的特定位置。
+
+其中函数所给的二叉排序树只显示了根节点的地址，和之前一样，需要查找这些节点的值以及其所连的左右子节点：
+* 左子节点的地址是该节点的地址加8的解引用。
+![str8](image/2021-07-11-17-09-59.png)
+* 右子节点的地址是该节点的地址加16的解引用。
+![str9](image/2021-07-11-17-11-18.png)
+* 每个节点的值就是该节点地址的解引用。
+![str10](image/2021-07-11-17-12-31.png)
+
+以下是该函数所给的二叉排序树的各节点的地址与值：
+```mermaid
+graph TB
+root(0x6030f0 value:0x24)-->a1(0x603110 value:0x8)
+root-->a2(0x603130 value:0x32)
+a1-->b1(0x603190 value:0x6)
+a1-->b2(0x603150 value:0x16)
+a2-->b3(0x603170 value:0x2d)
+a2-->b4(0x6031b0 value:0x6b)
+b1-->c1(0x6031f0 value:0x1)
+b1-->c2(0x603250 value:0x7)
+b2-->c3(0x603270 value:0x14)
+b2-->c4(0x603230 value:0x23)
+b3-->c5(0x6031d0 value:0x28)
+b3-->c6(0x603290 value:0x2f)
+b4-->c7(0x603210 value:0x63)
+b4-->c8(0x6032b0 value:0x3e9)
+```
+
+所以`secret_phase`函数对应的C语言代码应该为：
+```c
+void secret_phase(char *str)
+{
+    // 该函数将我们输入的字符串转换成整数
+    // 该整数必须小于等于1001，且该整数值必须要使fun7返回2，否则触发炸弹
+    // 0x6030f0是所给的二叉排序树的根节点的地址
+    unsigned int val = strtol(str, NULL, 10);
+    if (val - 1 > 1000 || fun7((int*)0x6030f0, val) != 2)
+        explode_bomb();
+}
+```
+
+##### 3.73 彩蛋关密码
+
+综上，彩蛋关的密码为
+`22`
+
+以下是通过彩蛋关的提示：
+![pass7](image/2021-07-11-03-28-16.png)
+
+现在我们才真正的破解了炸弹的所有密码，真正的拆除了炸弹，此时，实验才是真正的圆满完成！&#x1F600;
 
 ### 4.总结
 
