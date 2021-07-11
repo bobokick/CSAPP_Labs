@@ -331,13 +331,45 @@ void phase_6(char *str)
     while (--count3 != 0);
 }
 
+// 该函数是用来查找所给的整数值是否存在于所给的二叉排序树中
+// 并返回某种位置编号
+int fun7(int* root, int val)
+{
+    // 当树为空时，返回-1
+    if (root == NULL) 
+        return -1;
+    // 当val等于当前节点的值时，返回0
+    // 当val大于当前节点的值时，进入右子节点继续查找
+    else if (*root <= val)
+    {
+        if (*root == val)
+            return 0;
+        else
+            return fun7((int*)*(root + 2), val) * 2 + 1;
+    }
+    // 当val小于当前节点的值时，进入左子节点继续查找
+    else
+        return fun7((int*)*(root + 1), val) * 2;
+}
+
+void secret_phase(char *str)
+{
+    // 该函数将我们输入的字符串转换成整数
+    // 该整数必须小于等于1001，且该整数值必须要使fun7返回2，否则触发炸弹
+    // 0x6030f0是所给的二叉排序树的根节点的地址
+    unsigned int val = strtol(str, NULL, 10);
+    if (val - 1 > 1000 || fun7((int*)0x6030f0, val) != 2)
+        explode_bomb();
+}
+
 /*
 Border relations with Canada have never been better.
 1 2 4 8 16 32
 0 207
-7 0
+7 0 DrEvil
 IONEFG
 4 3 2 1 6 5
+22
 */
 int main()
 {

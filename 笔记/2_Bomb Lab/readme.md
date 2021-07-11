@@ -958,9 +958,77 @@ void phase_6(char *str)
 > 炸弹制作者——邪恶博士也在他的`bomb.c`文件中暗示过隐藏关的存在。
 > ![secret](image/2021-07-11-17-36-53.png)
 
-现在，就让我们来破解隐藏关的密码！
+##### 3.71 彩蛋关入口
 
-##### 3.71 fun7函数
+可是我们在第六关以及前面的关卡没有遇到过进入隐藏关的入口啊，那么我们应该怎么进入隐藏关呢？
+
+我们可以在汇编代码中搜索一下`secret_phase`名字，看看有哪个函数调用了`secret_phase`函数。
+果不其然，我们发现了`phase_defused`函数调用过这个隐藏关函数，除此之外就没有函数调用过了。
+![call_sec](image/2021-07-11-20-26-50.png)
+
+那么我们就从`phase_defused`函数入手，再调查一下`phase_defused`函数的被调用情况，发现每通过一关，`main`函数都会调用一次`phase_defused`函数，所以`phase_defused`函数可能会执行通关关卡的某些检查操作。
+![chk_def](image/2021-07-11-20-29-45.png)
+
+我们现在需要对`phase_defused`函数的代码进行分析，以下我对`phase_defused`函数分析后的汇编代码(包含注释)：
+```bash
+00000000004015c4 <phase_defused>:
+  4015c4:	48 83 ec 78          	sub    $0x78,%rsp
+  4015c8:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+  4015cf:	00 00 
+  4015d1:	48 89 44 24 68       	mov    %rax,0x68(%rsp)
+  4015d6:	31 c0                	xor    %eax,%eax
+  4015d8:	83 3d 81 21 20 00 06 	cmpl   $0x6,0x202181(%rip)        # 603760 <num_input_strings>
+  4015df:	75 5e                	jne    40163f <phase_defused+0x7b>  # check whether it is in phase_6, execute the jump instruction if it isn't phase_6.
+  # the passing of other phases won't enter the next steps except the passing of phase_6.
+  4015e1:	4c 8d 44 24 10       	lea    0x10(%rsp),%r8
+  4015e6:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx
+  4015eb:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx
+  4015f0:	be 19 26 40 00       	mov    $0x402619,%esi	# %d %d %s, 
+  4015f5:	bf 70 38 60 00       	mov    $0x603870,%edi	# record the print on phase_4.
+  # only when pass the phase and print the extra chars in the end of codes on the phase_4, can be recorded by the address called 0x402619.
+  4015fa:	e8 f1 f5 ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+  4015ff:	83 f8 03             	cmp    $0x3,%eax
+  401602:	75 31                	jne    401635 <phase_defused+0x71>  #jump if the amount of matching isn't 3.
+  401604:	be 22 26 40 00       	mov    $0x402622,%esi	#DrEvil
+  401609:	48 8d 7c 24 10       	lea    0x10(%rsp),%rdi
+  40160e:	e8 25 fd ff ff       	callq  401338 <strings_not_equal>  #compare whether the extra chars is same as the string called "DrEvil".
+  401613:	85 c0                	test   %eax,%eax
+  401615:	75 1e                	jne    401635 <phase_defused+0x71>  # jump if it isn't same.
+  401617:	bf f8 24 40 00       	mov    $0x4024f8,%edi	#Curses, you've found the secret phase!
+  40161c:	e8 ef f4 ff ff       	callq  400b10 <puts@plt>	# print the string above.
+  401621:	bf 20 25 40 00       	mov    $0x402520,%edi	#But finding it and solving it are quite different...
+  401626:	e8 e5 f4 ff ff       	callq  400b10 <puts@plt>	#print the string above.
+  40162b:	b8 00 00 00 00       	mov    $0x0,%eax
+  401630:	e8 0d fc ff ff       	callq  401242 <secret_phase>	#enter the secret phase.
+  401635:	bf 58 25 40 00       	mov    $0x402558,%edi	#Congratulations! You've defused the bomb!
+  40163a:	e8 d1 f4 ff ff       	callq  400b10 <puts@plt>	#print the congratulation when pass all phases.
+  40163f:	48 8b 44 24 68       	mov    0x68(%rsp),%rax
+  401644:	64 48 33 04 25 28 00 	xor    %fs:0x28,%rax
+  40164b:	00 00 
+  40164d:	74 05                	je     401654 <phase_defused+0x90>	# check the status of buff overflow.
+  40164f:	e8 dc f4 ff ff       	callq  400b30 <__stack_chk_fail@plt>
+  401654:	48 83 c4 78          	add    $0x78,%rsp
+  401658:	c3                   	retq   
+  401659:	90                   	nop
+  40165a:	90                   	nop
+  40165b:	90                   	nop
+  40165c:	90                   	nop
+  40165d:	90                   	nop
+  40165e:	90                   	nop
+  40165f:	90                   	nop
+```
+
+经过分析后，我们可以发现隐藏关的入口在第四关里：
+我们要想进入隐藏关，就要在输入第四关的密码时在后面加上邪恶博士的名字`DrEvil`，也就是第四关的密码变为`7 0 DrEvil`。
+![new_code](image/2021-07-11-20-39-48.png)
+
+这样我们就能在通过第六关时进入隐藏关了！
+以下是进入隐藏关后的提示界面：
+![enter_sec](image/2021-07-11-20-41-39.png)
+
+现在，就让我们来破解隐藏关的密码吧！
+
+##### 3.72 fun7函数
 
 我们对`secret_phase`函数分析，发现其调用了一个名为`fun7`的函数。
 
@@ -1018,7 +1086,7 @@ int fun7(int* root, int val)
 }
 ```
 
-##### 3.72 secret_phase函数
+##### 3.73 secret_phase函数
 
 对`secret_phase`函数进行分析。
 
@@ -1103,13 +1171,13 @@ void secret_phase(char *str)
 }
 ```
 
-##### 3.73 彩蛋关密码
+##### 3.74 彩蛋关密码
 
 综上，彩蛋关的密码为
 `22`
 
 以下是通过彩蛋关的提示：
-![pass7](image/2021-07-11-03-28-16.png)
+![pass7](image/2021-07-11-20-43-56.png)
 
 现在我们才真正的破解了炸弹的所有密码，真正的拆除了炸弹，此时，实验才是真正的圆满完成！&#x1F600;
 
