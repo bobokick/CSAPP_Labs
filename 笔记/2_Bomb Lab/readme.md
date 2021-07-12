@@ -295,24 +295,24 @@ void read_six_numbers(char* str, int *top)
 {
     // 储存int指针的数组
     int *int_ptrs[3];
-    // 传入的int指针，指向int数组的最后一个元素。
+    // 传入的int指针，指向int数组的第一个元素。
     // 第1个写入
     int *rd = top;
     // 第2个写入
-    int *rc = top - 1;
+    int *rc = top + 1;
     // 第6个写入
-    int_ptrs[1] = top - 5;
+    int_ptrs[1] = top + 5;
     // 第5个写入
-    int_ptrs[2] = top - 4;
+    int_ptrs[0] = top + 4;
     // 第4个写入
-    int *r9 = top - 3;
+    int *r9 = top + 3;
     // 第3个写入
-    int *r8 = top - 2;
+    int *r8 = top + 2;
     // 格式字符串
     // *0x4025c3
     char* formats = "%d %d %d %d %d %d"; 
     // 当读取的匹配格式的字符数量小于6时，触发炸弹
-    if (sscanf(str, formats, rd, rc, r8, r9, int_ptrs[2], int_ptrs[1]) <= 5)
+    if (sscanf(str, formats, rd, rc, r8, r9, int_ptrs[0], int_ptrs[1]) <= 5)
         explode_bomb();
 }
 ```
@@ -355,7 +355,7 @@ void phase_2(char *str)
 {
     // 储存所读取的值
     int int_vals[10];
-    int *top = &int_vals[9];
+    int *top = int_vals;
     // 进行读取
     read_six_numbers(str, top);
     // 第一个读取的值必须为1，且后一个读取的值必须
@@ -363,13 +363,13 @@ void phase_2(char *str)
     // 也就是首项为1，公比为1/2的等比数列
     if (*top == 1)
     {
-        int* iter_ptr = top - 1;
+        int* iter_ptr = top + 1;
         do
-            if (*iter_ptr == *(iter_ptr + 1)*2)
-                iter_ptr -= 1;
+            if (*iter_ptr == *(iter_ptr - 1)*2)
+                iter_ptr += 1;
             else
                 explode_bomb();
-        while (iter_ptr != top - 6);
+        while (iter_ptr != top + 6);
     }
     else explode_bomb();
 }
@@ -443,10 +443,10 @@ void phase_3(char *str)
     int int_vals[6];
     // 指向标签值的指针
     // 第2个写入
-    int *val = &int_vals[2];
+    int *val = &int_vals[3];
     // 指向目标值的指针
     // 第1个写入
-    int *sel = &int_vals[3];
+    int *sel = &int_vals[2];
     // 读取的匹配格式的字符数量必须要大于1，标签值要小于8，
     // 且目标值要与对应标签中的值相同，否则触发炸弹
     // *0x4025cf
@@ -589,9 +589,9 @@ void phase_4(char *str)
     // 储存值
     int int_vals[6];
     // 第2个写入
-    int *rcx = &int_vals[2];
+    int *rcx = &int_vals[3];
     // 第1个写入
-    int *rdx = &int_vals[3];
+    int *rdx = &int_vals[2];
     // 我们的输入值必须满足：
     // 读取的匹配格式的字符数量必须要等于2
     // 第1个写入的值要小于等于14且要使func4返回0
@@ -840,8 +840,8 @@ void phase_6(char *str)
     int* ptrs[6];
     // 储存读取的整数
     int int_vals[8];
-    int* vals_top = &int_vals[7];
-    int** ptrs_top = &ptrs[5];
+    int* vals_top = int_vals;
+    int** ptrs_top = ptrs;
     // 进行6个整数的读取
     read_six_numbers(str, vals_top);
 
@@ -861,10 +861,10 @@ void phase_6(char *str)
                 int inner_count = count;
                 // 检查整数之间是否有重复的
                 do
-                    if (*num_iter == *(vals_top - inner_count))
+                    if (*num_iter == *(vals_top + inner_count))
                         explode_bomb();
                 while (++inner_count <= 5);
-                num_iter -= 1;
+                num_iter += 1;
             }
         }
         else
@@ -876,7 +876,7 @@ void phase_6(char *str)
     int *num_iter2 = vals_top;
     do
         *num_iter2 = 7 - *num_iter2;
-    while (++num_iter2 != vals_top - 6);
+    while (++num_iter2 != vals_top + 6);
 
     // 根据该函数所给的链表地址和之前整数的值
     // 对链表的某些节点地址进行储存
@@ -898,27 +898,27 @@ void phase_6(char *str)
         }
         else
             spec_val = 0x6032d0;
-        // 从指针数组的末尾到开头的顺序逐个储存节点地址
-        *(ptrs_top - count2) = (int*)spec_val;
+        // 从指针数组的开头到末尾的顺序逐个储存节点地址
+        *(ptrs_top + count2) = (int*)spec_val;
         // 当指针数组全都储存完毕后，退出储存
         if (++count2 == 6)
             break;
         // 逐个选择整数值
-        iter_num = vals_top - count2;
+        iter_num = vals_top + count2;
     }
 
-    // 使指针数组里所储存的各个节点按从末尾到开头的顺序连接起来，形成一个新的链表。
+    // 使指针数组里所储存的各个节点按从开头到末尾的顺序连接起来，形成一个新的链表。
     int* rsp_32 = *ptrs_top;
-    int** iter_ptr = ptrs_top - 1;
+    int** iter_ptr = ptrs_top + 1;
     int* temp_ptr = rsp_32;
     do
     {
-        // 使数组的后一个元素指向数组的前一个元素。
+        // 使数组的前一个元素指向数组的后一个元素。
         *(temp_ptr + 1) = (int)*iter_ptr;
         temp_ptr = *iter_ptr;
-        iter_ptr -= 1;
+        iter_ptr += 1;
     }
-    while (iter_ptr != ptrs_top - 6);
+    while (iter_ptr != ptrs_top + 6);
     // 形成尾节点
     *iter_ptr = 0;
 
