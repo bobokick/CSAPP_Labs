@@ -264,7 +264,7 @@ stack:
 
 #### 3.2 第二关
 
-##### 3.11 任务要求
+##### 3.21 任务要求
 
 第二关所需的所有工具文件在`archlab-handout/sim/seq`目录下。
 
@@ -283,12 +283,12 @@ stack:
 漏洞测试都通过后就可以测试新加指令的逻辑问题了，在终端程序的`archlab-handout/sim/seq`目录下先后输入指令`cd ../ptest; make SIM=../seq/ssim TFLAGS=-i`来进行。
 只有这三个测试全部通过才算完成该关。
 
-##### 3.12 任务解答
+##### 3.22 任务解答
 
 本关需要我们在Y86-64顺序处理器中添加一个新的`iaddq`指令，该指令是将左边的立即数与右边的寄存器相加，并将其值保存在右边的寄存器中。
 通过观察CSAPP_3th第四章中所给的Opt指令流程：
 ![opt](image/2021-09-14%2018-13-26屏幕截图.png)
-我们可以推测出`iaddq`指令的流程应该为以下所示：
+我们可以推测出顺序结构的`iaddq`指令的流程应该为以下所示：
 ```hcl
 #		iaddq V,rB
 #phaseFetch
@@ -450,8 +450,171 @@ word new_pc = [
 #/* $end seq-all-hcl */
 ```
 
+以下是该文件编译并通过所有测试的界面：
+![pass2.1](image/2021-09-14%2019-08-16屏幕截图.png)
+![pass2.2](image/2021-09-14%2019-11-43屏幕截图.png)
+![pass2.3](image/2021-09-14%2019-12-17屏幕截图.png)
+
+#### 3.3 第三关
+
+##### 3.31 任务要求
+
+第三关所需的所有工具文件在`archlab-handout/sim/pipe`目录下。
+
+本关是第一和第二关的综合，让我们通过参考`ncopy.c`文件中的`ncopy`函数，根据程序优化相关知识，优化`ncopy.ys`文件中`ncopy`函数的汇编代码，使其满足任务要求。
+本关可以像第二关一样修改文件`pipe-full.hcl`，使该Y86-64流水线处理器包含新增的`iaddq`指令，该指令可以用于`ncopy`函数的汇编代码，以对其进行优化。
+
+以下为`ncopy`函数的c语言代码和汇编代码：
+```c
+// 以下为ncopy.c中的ncopy函数的相关代码
+/* $begin ncopy */
+/*
+ * ncopy - copy src to dst, returning number of positive ints
+ * contained in src array.
+ */
+word_t ncopy(word_t *src, word_t *dst, word_t len)
+{
+    word_t count = 0;
+    word_t val;
+
+    while (len > 0) {
+	val = *src++;
+	*dst++ = val;
+	if (val > 0)
+	    count++;
+	len--;
+    }
+    return count;
+}
+/* $end ncopy */
+```
+```as
+# 以下为原ncopy.ys中的ncopy函数的相关代码
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorq %rax,%rax		# count = 0;
+	andq %rdx,%rdx		# len <= 0?
+	jle Done		# if so, goto Done:
+
+Loop:	mrmovq (%rdi), %r10	# read val from src...
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	andq %r10, %r10		# val <= 0?
+	jle Npos		# if so, goto Npos:
+	irmovq $1, %r10
+	addq %r10, %rax		# count++
+Npos:	irmovq $1, %r10
+	subq %r10, %rdx		# len--
+	irmovq $8, %r10
+	addq %r10, %rdi		# src++
+	addq %r10, %rsi		# dst++
+	andq %rdx,%rdx		# len > 0?
+	jg Loop			# if so, goto Loop:
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+```
+
+在修改完`pipe-full.hcl`文件后，我们需要在目录`archlab-handout/sim/pipe`下使用其中的`makefile`文件编译该新的处理器模拟程序，其中模拟程序可以选择tty模式和gui模式，gui模式为`makefile`文件设置的默认模式，gui模式可以进行单步调试，但需要先安装tty等依赖包，所以我选的是tty模式，可以直接编译该程序而不需要安装依赖包。
+改为tty模式的操作就是打开`makefile`文件并注释掉其中的`GUIMODE`、`TKLIBS`和`TKINC`变量。
+在终端程序的`archlab-handout/sim/pipe`目录下输入指令`make psim VERSION=full`来编译新的处理器模拟程序。
+和第二关一样，编译出了新的处理器模拟程序后，我们需要两轮的漏洞测试（不会测试新加的指令），测试新加的指令会不会使其处理器模拟程序产生漏洞，在终端程序的`archlab-handout/sim/pipe`目录下先后输入指令`./psim -t ../y86-code/asumi.yo`和`cd ../y86-code; make testpsim`来进行小型和大型漏洞测试。
+漏洞测试都通过后就可以测试新加指令的逻辑问题了，在终端程序的`archlab-handout/sim/pipe`目录下先后输入指令`cd ../ptest; make SIM=../pipe/psim TFLAGS=-i`来进行。
+
+在修改完`ncopy.ys`文件后，我们需要对其进行测试，测试优化后的代码是否正确并符合要求，如果其使用了新添加的指令，则必须首先要保证新的Y86-64流水线处理器被编译出来并正常无误的运行。
+在终端程序的`archlab-handout/sim/pipe`目录下先后输入指令`../misc/yas ncopy.ys; ./check-len.pl ncopy.yo`、`./correctness.pl ncopy.ys`和`./benchmark.pl ncopy.ys`来进行代码长度检查，代码逻辑检查和代码CPE检查（CPE是测试该文件代码性能的一个指标，表示每复制一个元素所需要的cpu时钟周期，CPE越小就证明该代码复制元素的速度越快）。
+
+任务要求代码长度不能超过1000字节，逻辑要正确没有漏洞，CPE要小于9.00（如果小于7.5则是该代码所能达到的最优性能）。
+
+##### 3.32 任务解答
+
+本关需要对`ncopy`函数的汇编代码进行优化，使其满足任务要求，通过观察`ncopy`函数的原始汇编代码，发现该代码的CPE为15.62，所以我们需要添加并使用`iaddq`指令来优化该代码。
+以下为推测出的流水线结构的`iaddq`指令流程
+```hcl
+#		iaddq V,rB
+#phaseFetch
+#	PC <-- {predPC, valA, valM }
+#	icode:ifun <-- M1[PC]
+#	rB <-- M1[PC+1]
+#	valC <-- M8[PC+2]
+#	predPC <-- PC+10
+#phaseDecode
+#	valB <-- R[rB]
+#phaseExecute
+#	valE <-- valC+valB
+#	set CC
+#phaseMemory
+#	
+#phaseWriteBack
+#	R[rB] <-- valE
+```
+根据推测出的`iaddq`指令流程，我们就需要在`pipe-full.hcl`文件中添加或修改对应的hcl变量表达式，具体修改可参考哦笔记中对应的`pipe-full.hcl`文件。
+
+修改`pipe-full.hcl`文件后需要进行编译并测试，防止出现漏洞，以下是`pipe-full.hcl`文件编译并通过所有测试的界面：
+![pass3.1](image/2021-09-14%2020-03-38屏幕截图.png)
+![pass3.2](image/2021-09-14%2020-04-55屏幕截图.png)
+![pass3.3](image/2021-09-14%2020-05-08屏幕截图.png)
+![pass3.4](image/2021-09-14%2020-05-34屏幕截图.png)
+![pass3.5](image/2021-09-14%2020-05-59屏幕截图.png)
+
+添加完新的`iaddq`指令后，我们需要对`ncopy.ys`文件中的函数`ncopy`进行修改，优化该代码，其中我们可以看到用了一个条件跳转指令来表示循环，我们可以根据程序优化相关知识，将其调整为循环展开，从而避免可能判断错误而造成时钟周期的浪费。
+以下为优化后的汇编代码：
+```as
+# 以下为修改后的ncopy.ys中的ncopy函数的相关代码
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorq %rax,%rax		# count = 0;
+	jmp test			# goto test
+loop:
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	iaddq $-1, %rdx		# len--
+	andq %r10, %r10		# val <= 0?
+	jle test			# if so, goto test
+	iaddq $1, %rax		# count++
+test:
+	andq %rdx,%rdx		# len > 0?
+	jg loop			# if so, goto loop:
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+```
+
+以下是优化后的`ncopy.ys`文件通过所有检查的界面：
+![pass3.6](image/2021-09-14%2020-27-30屏幕截图.png)
+![pass3.7](image/2021-09-14%2020-27-40屏幕截图.png)
+![pass3.8](image/2021-09-14%2020-28-07屏幕截图.png)
+![pass3.9](image/2021-09-14%2020-28-19屏幕截图.png)
+
 ### 4.总结
 
-本次实验让我们深入地认识了有关缓存区溢出的相关知识。
+本次实验让我们深入地认识并了解了处理器的指令结构以及实现其指令架构的相关知识。
 
-通过这次实验，我们会在以后的编写代码时更加注意这方面的问题，避免发生这些漏洞，从而写出更加健壮的程序。
+通过这次实验，我们在以后的编写代码时能够从处理器指令的方面考虑代码编写所花费的时间与空间，这样能够让我们写出时间更快，内存更少的程序。
