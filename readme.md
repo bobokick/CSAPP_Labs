@@ -23,3 +23,5 @@
 [2. Bomb Lab](笔记/2_Bomb%20Lab)
 
 [3. Attack Lab](笔记/3_Attack%20Lab)
+
+[4. Architecture Lab](笔记/4_Architecture%20Lab)

@@ -1,0 +1,38 @@
+    .pos 0
+    irmovq stack, %rsp
+    irmovq src, %rdi
+    irmovq dest, %rsi
+    irmovq $3, %rdx
+    call cpblock
+    halt
+
+.align 8
+src:
+    .quad 0x00a
+    .quad 0x0b0
+    .quad 0xc00
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+cpblock:
+    irmovq $0, %rax
+    irmovq $8, %r8
+    irmovq $1, %r9
+    jmp test
+loop:
+    mrmovq 0(%rdi), %r11
+    rmmovq %r11, 0(%rsi)
+    addq %r8, %rdi
+    addq %r8, %rsi
+    xorq %r11, %rax
+    subq %r9, %rdx
+test:
+    rrmovq %rdx, %r10
+    andq %r10, %r10
+    jne loop
+    ret
+
+.pos 0x200
+stack:

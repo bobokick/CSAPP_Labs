@@ -4,7 +4,7 @@
 
 > 我的实验环境是：
 > intel core i7 6700hq x86-64位
-> CentOS 7.9
+> CentOS 7.9 以及 Ubuntu 20.04
 
 我的解答在对应实验文件夹中的`readme.md`中；源代码在对应实验文件夹中的同名文件夹中。
 
