@@ -23,6 +23,35 @@ word_t ncopy(word_t *src, word_t *dst, word_t len)
     }
     return count;
 }
+
+/*I modifyed*/
+word_t modifyed_ncopy(word_t *src, word_t *dst, word_t len)
+{
+    word_t count = 0;
+    word_t val;
+    word_t limit = len - 1;
+
+    while (limit > 0) 
+    {
+		val = *src++;
+		*dst++ = val;
+		count += (val > 0) ? 1 : 0;
+		val = *src++;
+		*dst++ = val;
+		count += (val > 0) ? 1 : 0;
+		len -= 2;
+    }
+    
+    while (len > 0)
+    {
+    	val = *src++;
+		*dst++ = val;
+		count += (val > 0) ? 1 : 0;
+		len--;
+    }
+    return count;
+}
+
 /* $end ncopy */
 
 int main()

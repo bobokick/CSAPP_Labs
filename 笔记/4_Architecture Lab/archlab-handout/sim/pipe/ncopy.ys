@@ -18,20 +18,101 @@ ncopy:
 ##################################################################
 # You can modify this portion
 	# Loop header
+	rrmovq %rdx, %r9	# loop unroll variable
+	iaddq $-7, %r9		# for loop unroll
 	xorq %rax,%rax		# count = 0;
-	jmp test			# goto test
-loop:
+	jmp mainTest		# goto mainTest
+mainLoop:
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump1			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump1:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump2			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump2:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump3			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump3:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump4			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump4:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump5			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump5:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump6			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump6:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump7			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump7:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump8			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump8:
+
+	iaddq $-8, %r9		# decrease amount of limit
+	iaddq $-8, %rdx	# decrease amount of len
+mainTest:
+	andq %r9,%r9		# len > 0?
+	jg mainLoop			# if so, goto mainLoop:
+	jmp restTest		# goto restTest
+restLoop:
 	mrmovq (%rdi), %r10	# read val from src...
 	iaddq $8, %rdi		# src++
 	rmmovq %r10, (%rsi)	# ...and store it to dst
 	iaddq $8, %rsi		# dst++
 	iaddq $-1, %rdx		# len--
 	andq %r10, %r10		# val <= 0?
-	jle test			# if so, goto test
+	jle restTest		# if so, jump the count
 	iaddq $1, %rax		# count++
-test:
+restTest:
 	andq %rdx,%rdx		# len > 0?
-	jg loop			# if so, goto loop:
+	jg restLoop			# if so, goto restLoop:
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.

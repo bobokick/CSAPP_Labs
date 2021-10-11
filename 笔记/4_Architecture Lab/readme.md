@@ -569,10 +569,10 @@ End:
 ![pass3.4](image/2021-09-14%2020-05-34屏幕截图.png)
 ![pass3.5](image/2021-09-14%2020-05-59屏幕截图.png)
 
-添加完新的`iaddq`指令后，我们需要对`ncopy.ys`文件中的函数`ncopy`进行修改，优化该代码，其中我们可以看到用了一个条件跳转指令来表示循环，我们可以根据程序优化相关知识，将其调整为循环展开，从而避免可能判断错误而造成时钟周期的浪费。
+添加完新的`iaddq`指令后，我们需要对`ncopy.ys`文件中的函数`ncopy`进行修改，优化该代码，其中我们可以看到用了一个条件跳转指令来表示循环，我们可以根据程序优化相关知识，将其调整为循环展开，从而减少循环判断等指令操作的次数。
 以下为优化后的汇编代码：
 ```as
-# 以下为修改后的ncopy.ys中的ncopy函数的相关代码
+# 以下为修改后的ncopy.ys中的ncopy函数的相关代码，经测试，展开8次是最优的，多了少了都会增加CPE。
 ##################################################################
 # Do not modify this portion
 # Function prologue.
@@ -582,20 +582,101 @@ ncopy:
 ##################################################################
 # You can modify this portion
 	# Loop header
+	rrmovq %rdx, %r9	# loop unroll variable
+	iaddq $-7, %r9		# for loop unroll
 	xorq %rax,%rax		# count = 0;
-	jmp test			# goto test
-loop:
+	jmp mainTest		# goto mainTest
+mainLoop:
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump1			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump1:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump2			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump2:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump3			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump3:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump4			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump4:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump5			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump5:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump6			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump6:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump7			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump7:
+
+	mrmovq (%rdi), %r10	# read val from src...
+	iaddq $8, %rdi		# src++
+	rmmovq %r10, (%rsi)	# ...and store it to dst
+	iaddq $8, %rsi		# dst++
+	andq %r10, %r10		# val <= 0?
+	jle jump8			# if so, jump the count
+	iaddq $1, %rax		# count++
+jump8:
+
+	iaddq $-8, %r9		# decrease amount of limit
+	iaddq $-8, %rdx	# decrease amount of len
+mainTest:
+	andq %r9,%r9		# len > 0?
+	jg mainLoop			# if so, goto mainLoop:
+	jmp restTest		# goto restTest
+restLoop:
 	mrmovq (%rdi), %r10	# read val from src...
 	iaddq $8, %rdi		# src++
 	rmmovq %r10, (%rsi)	# ...and store it to dst
 	iaddq $8, %rsi		# dst++
 	iaddq $-1, %rdx		# len--
 	andq %r10, %r10		# val <= 0?
-	jle test			# if so, goto test
+	jle restTest		# if so, jump the count
 	iaddq $1, %rax		# count++
-test:
+restTest:
 	andq %rdx,%rdx		# len > 0?
-	jg loop			# if so, goto loop:
+	jg restLoop			# if so, goto restLoop:
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
@@ -608,10 +689,10 @@ End:
 ```
 
 以下是优化后的`ncopy.ys`文件通过所有检查的界面：
-![pass3.6](image/2021-09-14%2020-27-30屏幕截图.png)
-![pass3.7](image/2021-09-14%2020-27-40屏幕截图.png)
-![pass3.8](image/2021-09-14%2020-28-07屏幕截图.png)
-![pass3.9](image/2021-09-14%2020-28-19屏幕截图.png)
+![pass3.6](image/2021-10-11%2013-41-10屏幕截图.png)
+![pass3.7](image/2021-10-11%2013-41-48屏幕截图.png)
+![pass3.8](image/2021-10-11%2013-42-14屏幕截图.png)
+![pass3.9](image/2021-10-11%2013-42-25屏幕截图.png)
 
 ### 4.总结
 

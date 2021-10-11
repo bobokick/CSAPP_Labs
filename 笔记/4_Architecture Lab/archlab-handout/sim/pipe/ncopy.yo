@@ -18,26 +18,107 @@
                             | ##################################################################
                             | # You can modify this portion
                             | 	# Loop header
-0x000: 6300                 | 	xorq %rax,%rax		# count = 0;
-0x002: 705200000000000000   | 	jmp test			# goto test
-0x00b:                      | loop:
-0x00b: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
-0x015: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
-0x01f: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
-0x029: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
-0x033: c0f2ffffffffffffffff | 	iaddq $-1, %rdx		# len--
-0x03d: 62aa                 | 	andq %r10, %r10		# val <= 0?
-0x03f: 715200000000000000   | 	jle test			# if so, goto test
-0x048: c0f00100000000000000 | 	iaddq $1, %rax		# count++
-0x052:                      | test:
-0x052: 6222                 | 	andq %rdx,%rdx		# len > 0?
-0x054: 760b00000000000000   | 	jg loop			# if so, goto loop:
+0x000: 2029                 | 	rrmovq %rdx, %r9	# loop unroll variable
+0x002: c0f9f9ffffffffffffff | 	iaddq $-7, %r9		# for loop unroll
+0x00c: 6300                 | 	xorq %rax,%rax		# count = 0;
+0x00e: 701302000000000000   | 	jmp mainTest		# goto mainTest
+0x017:                      | mainLoop:
+0x017: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x021: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x02b: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x035: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x03f: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x041: 715400000000000000   | 	jle jump1			# if so, jump the count
+0x04a: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x054:                      | jump1:
+                            | 
+0x054: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x05e: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x068: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x072: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x07c: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x07e: 719100000000000000   | 	jle jump2			# if so, jump the count
+0x087: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x091:                      | jump2:
+                            | 
+0x091: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x09b: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x0a5: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x0af: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x0b9: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x0bb: 71ce00000000000000   | 	jle jump3			# if so, jump the count
+0x0c4: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x0ce:                      | jump3:
+                            | 
+0x0ce: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x0d8: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x0e2: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x0ec: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x0f6: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x0f8: 710b01000000000000   | 	jle jump4			# if so, jump the count
+0x101: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x10b:                      | jump4:
+                            | 
+0x10b: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x115: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x11f: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x129: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x133: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x135: 714801000000000000   | 	jle jump5			# if so, jump the count
+0x13e: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x148:                      | jump5:
+                            | 
+0x148: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x152: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x15c: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x166: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x170: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x172: 718501000000000000   | 	jle jump6			# if so, jump the count
+0x17b: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x185:                      | jump6:
+                            | 
+0x185: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x18f: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x199: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x1a3: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x1ad: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x1af: 71c201000000000000   | 	jle jump7			# if so, jump the count
+0x1b8: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x1c2:                      | jump7:
+                            | 
+0x1c2: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x1cc: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x1d6: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x1e0: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x1ea: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x1ec: 71ff01000000000000   | 	jle jump8			# if so, jump the count
+0x1f5: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x1ff:                      | jump8:
+                            | 
+0x1ff: c0f9f8ffffffffffffff | 	iaddq $-8, %r9		# decrease amount of limit
+0x209: c0f2f8ffffffffffffff | 	iaddq $-8, %rdx	# decrease amount of len
+0x213:                      | mainTest:
+0x213: 6299                 | 	andq %r9,%r9		# len > 0?
+0x215: 761700000000000000   | 	jg mainLoop			# if so, goto mainLoop:
+0x21e: 706e02000000000000   | 	jmp restTest		# goto restTest
+0x227:                      | restLoop:
+0x227: 50a70000000000000000 | 	mrmovq (%rdi), %r10	# read val from src...
+0x231: c0f70800000000000000 | 	iaddq $8, %rdi		# src++
+0x23b: 40a60000000000000000 | 	rmmovq %r10, (%rsi)	# ...and store it to dst
+0x245: c0f60800000000000000 | 	iaddq $8, %rsi		# dst++
+0x24f: c0f2ffffffffffffffff | 	iaddq $-1, %rdx		# len--
+0x259: 62aa                 | 	andq %r10, %r10		# val <= 0?
+0x25b: 716e02000000000000   | 	jle restTest		# if so, jump the count
+0x264: c0f00100000000000000 | 	iaddq $1, %rax		# count++
+0x26e:                      | restTest:
+0x26e: 6222                 | 	andq %rdx,%rdx		# len > 0?
+0x270: 762702000000000000   | 	jg restLoop			# if so, goto restLoop:
                             | ##################################################################
                             | # Do not modify the following section of code
                             | # Function epilogue.
-0x05d:                      | Done:
-0x05d: 90                   | 	ret
+0x279:                      | Done:
+0x279: 90                   | 	ret
                             | ##################################################################
                             | # Keep the following label at the end of your function
-0x05e:                      | End:
+0x27a:                      | End:
                             | #/* $end ncopy-ys */
