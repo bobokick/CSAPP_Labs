@@ -4,7 +4,7 @@
 
 **本教程是本人的原创教程，如需转载请注明来源！！！**
 
-> 目前只做完三个...
+> 目前只做完五个...
 
 ### 目录(catalogue)
 
@@ -25,3 +25,5 @@
 [3. Attack Lab](笔记/3_Attack%20Lab)
 
 [4. Architecture Lab](笔记/4_Architecture%20Lab)
+
+[5. Cache Lab](笔记/5_Cache%20Lab)
