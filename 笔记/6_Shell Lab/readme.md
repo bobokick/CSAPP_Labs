@@ -31,6 +31,7 @@
 ![k6](image/2021-10-23-15-26-46.png)
 ![k7](image/2021-10-23-15-27-21.png)
 ![k8](image/2021-10-23-15-27-46.png)
+![k9](image/2021-10-25-13-41-18.png)
 
 #### 3.1 第一关
 
@@ -65,7 +66,7 @@
 4. 函数`waitfg`：
    用于等待前台指令，挂起调用进程直到给定前台指令结束。
 5. 函数`sigchld_handler`、`sigint_handler`和`sigtstp_handler`：
-   三个信号处理函数，分别接受信号`SIGCHLD`、`SIGINT`和`SIGTSTP`，并进行对应的进程处理。
+   三个信号处理函数，分别接受信号`SIGCHLD`、`SIGINT`和`SIGTSTP`（来自终端的停止信号），并进行对应的进程处理。
    函数`sigint_handler`和`sigtstp_handler`只用于处理前台进程，输出相应提示，并及时更新该进程的状态；函数`sigchld_handler`主要用于检测已被停止和终止的子进程，并回收其中的被终止的子进程，且输出相应提示。
 6. 辅助函数：
     文件`tsh.c`中提供了一些有用的函数，方便我们函数的实现，比如有`parseline`函数来提取命令行信息，函数`addjob`和`deletejob`用于增删作业，函数`getjobpid`和`getjobjid`用于查找作业等。
