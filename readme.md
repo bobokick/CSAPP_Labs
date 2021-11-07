@@ -4,7 +4,7 @@
 
 **本教程是本人的原创教程，如需转载请注明来源！！！**
 
-> 目前已做完7个！
+> 目前已经全部完工！
 
 ### 目录(catalogue)
 
@@ -31,3 +31,5 @@
 [6. Shell Lab](笔记/6_Shell%20Lab)
 
 [7. Malloc Lab](笔记/7_Malloc%20Lab)
+
+[8. Proxy Lab](笔记/8_Proxy%20Lab)
