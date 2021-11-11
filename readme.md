@@ -14,22 +14,22 @@
 
 #### [笔记](./笔记)
 
-这里面含有我已完成实验的源程序以及相关的解答，以下是我目前已完成的实验笔记目录：
+这里面含有我已完成实验的源程序以及相关的解答，以下是我目前已完成的实验目录解答：
 
-##### 笔记目录
+##### 解答目录
 
-[1. Data Lab](笔记/1_Data%20Lab)
+[1. Data Lab](https://bobokick.github.io/showPage/CSAPP_Labs/1_DataLab/readme.html)
 
-[2. Bomb Lab](笔记/2_Bomb%20Lab)
+[2. Bomb Lab](https://bobokick.github.io/showPage/CSAPP_Labs/2_BombLab/readme.html)
 
-[3. Attack Lab](笔记/3_Attack%20Lab)
+[3. Attack Lab](https://bobokick.github.io/showPage/CSAPP_Labs/3_AttackLab/readme.html)
 
-[4. Architecture Lab](笔记/4_Architecture%20Lab)
+[4. Architecture Lab](https://bobokick.github.io/showPage/CSAPP_Labs/4_ArchitectureLab/readme.html)
 
-[5. Cache Lab](笔记/5_Cache%20Lab)
+[5. Cache Lab](https://bobokick.github.io/showPage/CSAPP_Labs/5_CacheLab/readme.html)
 
-[6. Shell Lab](笔记/6_Shell%20Lab)
+[6. Shell Lab](https://bobokick.github.io/showPage/CSAPP_Labs/6_ShellLab/readme.html)
 
-[7. Malloc Lab](笔记/7_Malloc%20Lab)
+[7. Malloc Lab](https://bobokick.github.io/showPage/CSAPP_Labs/7_MallocLab/readme.html)
 
-[8. Proxy Lab](笔记/8_Proxy%20Lab)
+[8. Proxy Lab](https://bobokick.github.io/showPage/CSAPP_Labs/8_ProxyLab/readme.html)
