@@ -10,7 +10,7 @@ LDFLAGS = -lpthread
 
 all: proxy
 
-proxy.o: proxy.c proxy.h usefulFunc.h fdsQueue.h cookieStruct.h cacheZone.h multilayerLlist.h
+proxy.o: proxy.c proxy.h usefulFunc.h fdsQueue.h webCache.h cacheZone.h multilayerLlist.h
 	$(CC) $(CFLAGS) -c proxy.c
 
 proxy: proxy.o

@@ -2,7 +2,7 @@
 #define PROXY_H
 #include "usefulFunc.h"
 #include "fdsQueue.h"
-#include "cookieStruct.h"
+#include "webCache.h"
 
 // 描述符队列的大小
 #define MAX_ITEM_NUM 20
@@ -13,7 +13,7 @@
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 
-Cookies proxyCookies;
+WebCache proxyWCaches;
 
 // 请求行结构
 typedef struct
@@ -132,8 +132,8 @@ int addressRequest(int conntfd)
     rio_initBuff(&fdBuff, conntfd);
     requestLSet rlset;
     initRequeseLine(&rlset);
-    char str[200] = "", forwardStr[1000] = "", rqstLine[100] = "", tempstr[30] = "", hostHder[30] = "", *pgetmsg, *dataInfo[3] = {0}, **pdataInfo = (char**)&dataInfo;
-    int rlen, cread = 0, dataLen, hitCookie = 0;
+    char str[200] = "", forwardStr[1000] = "", rqstLine[120] = "", tempstr[30] = "", hostHder[60] = "", *pgetmsg, *dataInfo[3] = {0}, **pdataInfo = (char**)&dataInfo;
+    int rlen, cread = 0, dataLen, hitWCache = 0;
     // 接收并处理代理的请求信息
     while ((rlen = rio_readlineb(&fdBuff, str, sizeof(str))) > 0)
     {
@@ -174,7 +174,7 @@ int addressRequest(int conntfd)
                 }
                 printf("%s", forwardStr);
                 dataInfo[0] = rlset.method, dataInfo[1] = rlset.hostname, dataInfo[2] = rlset.uri;
-                if ((hitCookie = searchDataInCookie(&proxyCookies, pdataInfo, &pgetmsg, &dataLen) + 1) || !strcmp("\r\n", str))
+                if ((hitWCache = searchDataInWCache(&proxyWCaches, pdataInfo, &pgetmsg, &dataLen) + 1) || !strcmp("\r\n", str))
                 {
                     strcat(forwardStr, str);
                     break;
@@ -202,19 +202,19 @@ int addressRequest(int conntfd)
     else if (rlen == 0)
         printf("the client has disconnected!\n");
     // 没有已缓存的响应信息的操作
-    if (!hitCookie)
+    if (!hitWCache)
     {
         // 消息转发并接收响应
         pgetmsg = (char*)malloc(MAX_CACHE_SIZE);
         forwardingMsg(&rlset, forwardStr, sizeof(forwardStr), pgetmsg, MAX_CACHE_SIZE, &dataLen);
         // 储存响应信息
         if (dataLen <= MAX_OBJECT_SIZE)
-            addDataToCookie(&proxyCookies, pgetmsg, dataLen, pdataInfo);
+            addDataToWCache(&proxyWCaches, pgetmsg, dataLen, pdataInfo);
     }
     // 将响应信息返回
     rio_writen(conntfd, pgetmsg, dataLen);
     shutdown(conntfd, SHUT_RDWR);
-    if (!hitCookie)
+    if (!hitWCache)
         free(pgetmsg);
     return 0;
 }

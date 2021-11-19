@@ -9,7 +9,7 @@ int listenfd;
 void *sigKillProcess(int sig)
 {
     close(listenfd);
-    cleanCookies(&proxyCookies);
+    cleanWCache(&proxyWCaches);
     deinitCfdsQueue(&cnntfdQ);
     printf("\nthe proxy server is terminated!\n");
     exit(0);
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     int cnntfd = -1, i;
     pthread_t pid;
     // 初始化代理缓冲区和描述符队列
-    initCookies(&proxyCookies, MAX_CACHE_SIZE);
+    initWCache(&proxyWCaches, MAX_CACHE_SIZE);
     initCfdsQueue(&cnntfdQ, MAX_ITEM_NUM);
     // 设置信号函数用于Ctrl+C和某方中断连接导致的BreakPipe
     signal(SIGINT, (__sighandler_t)sigKillProcess);
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
             perror("accept");
     }
     close(listenfd);
-    cleanCookies(&proxyCookies);
+    cleanWCache(&proxyWCaches);
     deinitCfdsQueue(&cnntfdQ);
     return 0;
 }
