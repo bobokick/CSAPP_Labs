@@ -21,7 +21,7 @@ typedef struct
 
 // 初始化队列
 // front%maxNum == end%maxNum时代表队列为空，
-// (end+1)%maxNum == front%maxNum时代表队列满了
+// front%maxNum == (end+1)%maxNum时代表队列满了
 void initCfdsQueue(cnntfdsQueue *fdQueue, int number)
 {
     fdQueue->maxNum = number;
