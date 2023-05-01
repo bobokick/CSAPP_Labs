@@ -10,7 +10,7 @@ int mllMallocCnt = 0;
 // 多层链表节点结构，用该结构可构成多层链接的链表
 struct mNode
 {
-    // 该节点所拥有的链表中的节点数量
+    // 该节点所拥有的下层链表中的节点数量
     int numSubNodes;
     // 节点名字信息，用于对节点进行索引(键)
     char nodeName[50];
